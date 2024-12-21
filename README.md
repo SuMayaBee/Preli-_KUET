@@ -104,6 +104,24 @@ tokenizer.save_pretrained("./Model")
 
 This challenge involves building a backend system to help Mofa manage his ingredients and suggest recipes based on available items. The solution leverages **MongoDB**, **Node.js**, and **Express.js** for database design, API creation, and recipe retrieval.
 
+
+### **Setup Instructions**
+
+1. Clone the repository to your local machine.
+2. Navigate to the project directory.
+3. Install the necessary dependencies by running:
+   ```bash
+   npm install
+   ```
+   
+### **Start the Program**
+
+To start the program, run the following command:
+
+```bash
+nodemon index.js
+```
+
 ---
 
 ## **1. Database Design**
