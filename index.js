@@ -4,6 +4,30 @@ import mongoose from 'mongoose';
 import connectDB from './db/connectDB.js';
 import IngredientsRoutes from './routes/ingredients.route.js';
 
+//sample data for testing
+/*
+{
+  "ingredients": [
+    {
+      "name": "Flour",
+      "quantity": "2 cups"
+    },
+    {
+      "name": "Sugar",
+      "quantity": "1.5 cups"
+    },
+    {
+      "name": "Milk",
+      "quantity": "500 ml"
+    }
+  ]
+}*/
+
+
+
+
+
+
 // Initialize the app
 const app = express();
 
