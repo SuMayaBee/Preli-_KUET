@@ -1,150 +1,318 @@
-Hackathon Preliminary Challenges - BitFest 2025
-Challenge 1: Banglish-to-Bengali Transliteration
-Problem Statement
-Iqbal needs a solution to convert Banglish (Bengali written in English characters) to Bengali script after losing access to a Bengali typing tool. This challenge involves training a sequence-to-sequence model for transliteration.
+# Challenge 1: Banglish-to-Bengali Transliteration
 
-Solution
-Dataset Preparation
-Dataset Used: SKNahin/bengali-transliteration-data.
-The dataset was split into training (80%) and validation (20%) sets.
-Model
-Model Type: mBART (Multilingual BART)
-Why mBART? It is pre-trained on multilingual text, making it suitable for low-resource language tasks like Banglish-to-Bengali transliteration.
-Workflow
-Preprocessing
+This challenge aims to build a machine learning model to transliterate Banglish (Bengali written in English letters) into proper Bengali script. The solution leverages Hugging Face's `MT5` model, fine-tuned on a Banglish-to-Bengali dataset.
 
-Tokenized Banglish and Bengali text using sequence-to-sequence tokenization.
-Cleaned the data by filtering excessively long or short sentences.
-Training
+---
 
-Fine-tuned mBART using the Hugging Face Transformers library.
-Hyperparameters:
-Learning Rate: 5e-5
-Batch Size: 16
-Epochs: 5
-Framework: PyTorch.
-Model Storage
+## **Approach**
 
-The trained model is stored in the GitHub repository under the Model directory.
-Deliverables
-Trained Model: GitHub Repository - Model Directory
-Jupyter Notebook: Located in the Challenge1 directory as banglish_transliteration.ipynb.
-Challenge 2: Mofa’s Kitchen Buddy
-Problem Statement
-Mofa wants a backend system to:
+### **1. Model Selection**
+- **Model Used**: `MT5 (Multilingual T5)`
+  - Selected for its ability to handle multilingual tasks and low-resource language datasets.
 
-Manage and update ingredients dynamically.
-Parse recipes from saved images or text files into a unified structure.
-Suggest recipes based on available ingredients using a chatbot.
-Solution
-Database Design
-Ingredients Schema
-name: Ingredient name.
-quantity: Quantity of the ingredient.
-Recipes Schema
-name: Recipe name.
-ingredients: List of ingredients with name and quantity.
-steps: Recipe preparation steps.
-taste: Taste of the recipe (e.g., Sweet, Savory).
-cuisine: Cuisine type (e.g., Italian, Bengali).
-preparationTime: Preparation time in minutes.
-reviews: User reviews with user, comment, and rating.
-Ingredient Management API
-Endpoints
-POST /api/ingredients - Add or update ingredients.
-GET /api/ingredients - Get all stored ingredients.
-DELETE /api/ingredients - Delete an ingredient.
-Recipe Retrieval
-Parsing Recipes
+### **2. Dataset Preparation**
+- **Dataset**: Used the Banglish-to-Bengali transliteration dataset.
+- **Splitting**:
+  - Training Set: 80%
+  - Validation Set: 20%
+- **Preprocessing**:
+  - Tokenized both Banglish and Bengali text using Hugging Face's `T5Tokenizer`.
+  - Applied padding and truncation with a maximum sequence length of `128`.
 
-Recipes stored in my_fav_recipes.txt are parsed and saved to the database.
-Optional fields such as taste, cuisine, and preparationTime are included for easier retrieval.
-Added OCR functionality using tesseract.js to parse recipes from images.
-Endpoints
+### **3. Training**
+- **Framework**: Hugging Face's `Trainer` API.
+- **Training Arguments**:
+  - `learning_rate`: `5e-5`
+  - `batch_size`: `4`
+  - `num_train_epochs`: `3`
+  - `evaluation_strategy`: `epoch` (evaluates the model after each epoch)
+  - `save_strategy`: `epoch` (saves the model checkpoint after each epoch)
+  - `logging_dir`: Logs directory for training metrics.
+- **Loss Function**: The model computes cross-entropy loss for sequence generation.
 
-GET /api/recipes/parse-text - Parse recipes from my_fav_recipes.txt.
-POST /api/recipes/parse-image - Parse recipes from an image using OCR.
-Chatbot Integration
-Model
+---
 
-OpenAI GPT-based chatbot for recipe suggestions.
-Functionality
+## **How to Use the Model**
 
-Accepts user preferences (e.g., "I want something sweet").
-Suggests recipes based on available ingredients and preferences.
-Endpoint
+### **1. Prerequisites**
+Install the required library:
+```bash
+pip install transformers
+```
 
-POST /api/chatbot - Suggest recipes based on user preferences.
-API Documentation
-Ingredient Management API
-Add or Update Ingredients
+### 2. Load the Model
 
-Route: /api/ingredients
-Method: POST
-Sample Payload:
-json
-Copy code
+The trained model is stored locally in the `Model` directory. Load it using the following code:
+
+```python
+from transformers import MT5ForConditionalGeneration, T5Tokenizer
+
+# Specify the path to the local model directory
+model_path = "./Model"
+
+# Load the tokenizer and model
+tokenizer = T5Tokenizer.from_pretrained(model_path)
+model = MT5ForConditionalGeneration.from_pretrained(model_path)
+
+```
+
+### 3. Generate Predictions
+
+Use the model to translate Banglish text to Bengali:
+
+```python
+def translate_banglish_to_bengali(banglish_text):
+    # Tokenize the input
+    inputs = tokenizer(banglish_text, return_tensors="pt", max_length=128, truncation=True)
+
+    # Generate output
+    outputs = model.generate(**inputs)
+
+    # Decode the output
+    bengali_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return bengali_text
+
+# Example usage
+banglish_text = "ami bhalo achi"
+bengali_output = translate_banglish_to_bengali(banglish_text)
+
+print(f"Banglish Input: {banglish_text}")
+print(f"Bengali Output: {bengali_output}")
+```
+
+### 4. Expected Output
+
+For the input `ami bhalo achi`, the output will be:
+
+```text
+Banglish Input: ami bhalo achi
+Bengali Output: আমি ভালো আছি
+```
+
+### Saving the Model
+
+If needed, the model and tokenizer can be saved again:
+
+```python
+model.save_pretrained("./Model")
+tokenizer.save_pretrained("./Model")
+```
+
+
+
+# Challenge 2: Mofa’s Kitchen Buddy
+
+This challenge involves building a backend system to help Mofa manage his ingredients and suggest recipes based on available items. The solution leverages **MongoDB**, **Node.js**, and **Express.js** for database design, API creation, and recipe retrieval.
+
+---
+
+## **1. Database Design**
+
+### **Schema for Ingredients**
+The ingredients database schema stores the list of available ingredients along with their quantities. Below is the Mongoose schema for this design:
+
+```javascript
+import mongoose from "mongoose";
+
+const ingredientSchema = new mongoose.Schema({
+    name: { type: String, required: true }, // Name of the ingredient
+    quantity: { type: String, required: true }, // Quantity as a string (e.g., "2 cups", "500 ml")
+    lastUpdated: { type: Date, default: Date.now }, // Timestamp for when the ingredient was last updated
+});
+
+export default mongoose.model("Ingredient", ingredientSchema);
+```
+
+### **Schema for Recipes**
+
+The recipes schema stores details about each recipe, including ingredients, steps, and optional metadata such as taste, cuisine, preparation time, and reviews.
+
+```javascript
+import mongoose from "mongoose";
+
+const recipeSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    ingredients: [
+        {
+            name: { type: String, required: true },
+            quantity: { type: String }, // Optional for parsing recipes
+        },
+    ],
+    steps: { type: String, required: true },
+    taste: { type: String }, // e.g., "Sweet", "Savory"
+    reviews: [{ user: String, comment: String, rating: Number }], // Array of reviews
+    cuisine: { type: String }, // e.g., "Italian", "Indian"
+    preparationTime: { type: Number }, // Time in minutes
+    addedAt: { type: Date, default: Date.now },
+});
+
+export default mongoose.model("Recipe", recipeSchema);
+```
+
+## **2. Ingredient Management API**
+
+This API allows adding, updating, retrieving, and deleting ingredients in the database.
+
+---
+
+### **API Endpoints**
+
+| Method | Endpoint               | Description                    |
+|--------|------------------------|--------------------------------|
+| POST   | `/api/ingredients`     | Add or update ingredients      |
+| PUT    | `/api/ingredients/:id` | Update existing ingredient quantities |
+| GET    | `/api/ingredients`     | Retrieve all ingredients       |
+| DELETE | `/api/ingredients/name`| Delete an ingredient by name   |
+
+---
+
+### **Sample Requests and Responses**
+
+#### **1. Add Ingredients**
+Request:
+
+```json
+POST /api/ingredients
 {
   "ingredients": [
-    { "name": "Sugar", "quantity": "2 cups" },
+    { "name": "Flour", "quantity": "2 cups" },
+    { "name": "Sugar", "quantity": "1.5 cups" },
     { "name": "Milk", "quantity": "500 ml" }
   ]
 }
-Get All Ingredients
+```
+#### **2. Update Ingredients**
+Request:
 
-Route: /api/ingredients
-Method: GET
-Sample Response:
-json
-Copy code
-[
-  { "name": "Sugar", "quantity": "2 cups" },
-  { "name": "Milk", "quantity": "500 ml" }
-]
-Delete an Ingredient
+```json
+PUT /api/ingredients/:id
+{
+  "ingredients": [
+    { "name": "Sugar", "quantity": "2 cups" }
+  ]
+}
+```
+#### **3. Get All Ingredients**
+Request:
 
-Route: /api/ingredients
-Method: DELETE
-Sample Payload:
-json
-Copy code
+```json
+GET /api/ingredients
+
+```
+#### **4. Delete Ingredient**
+Request:
+
+```json
+DELETE /api/ingredients/name
 {
   "name": "Sugar"
 }
-Recipe Retrieval API
-Parse Recipes from Text File
+```
 
-Route: /api/recipes/parse-text
-Method: GET
-Sample Response:
-json
-Copy code
-{
-  "message": "Recipes parsed and saved successfully."
-}
-Parse Recipe from Image
+## **3. Recipe Retrieval API**
 
-Route: /api/recipes/parse-image
-Method: POST
-Sample Payload:
-json
-Copy code
+This part of the challenge involves building a system to parse and store recipe details from already saved recipe images or texts into a combined file (`my_fav_recipes.txt`). It also includes developing APIs to input new favorite recipe images or texts.
+
+---
+
+### **API Endpoints**
+
+| Method | Endpoint               | Description                                      |
+|--------|------------------------|--------------------------------------------------|
+| POST   | `/api/recipes/add`     | Add a new recipe (text-based)                    |
+| GET    | `/api/recipes/parse-text` | Parse recipes from `my_fav_recipes.txt` and save to the database |
+| POST   | `/api/recipes/parse-image` | Parse recipes from an image (`recipe_image.png`) using OCR and save |
+| GET    | `/api/recipes`         | Retrieve all stored recipes                     |
+
+---
+
+### **Details of Endpoints**
+
+#### **1. Add a New Recipe**
+**Endpoint**: `POST /api/recipes/add`
+
+**Request Body:**
+```json
 {
-  "imagePath": "path/to/image.jpg"
+  "name": "Chocolate Cake",
+  "ingredients": [
+    { "name": "Flour", "quantity": "2 cups" },
+    { "name": "Sugar", "quantity": "1.5 cups" },
+    { "name": "Cocoa Powder", "quantity": "1/2 cup" }
+  ],
+  "steps": "Mix ingredients and bake at 350°F for 30 minutes.",
+  "taste": "Sweet",
+  "reviews": [
+    { "user": "John", "comment": "Delicious!", "rating": 5 }
+  ],
+  "cuisine": "Dessert",
+  "preparationTime": 45
 }
-Chatbot API
-Suggest Recipes
-Route: /api/chatbot
-Method: POST
-Sample Payload:
-json
-Copy code
+```
+
+### 2. Parse Recipes from Text File
+
+**Endpoint**: `GET /api/recipes/parse-text`  
+**File Used**: `my_fav_recipes.txt`  
+**Description**: Parses recipes from the text file and saves them to the database.
+
+### 3. Parse Recipes from Image
+
+**Endpoint**: `POST /api/recipes/parse-image`  
+**File Used**: `recipe_image.png`  
+
+**Request Body**:
+```json
 {
-  "preferences": "I want something sweet"
+  "imagePath": "recipe_image.png"
 }
-Sample Response:
-json
-Copy code
+``` 
+Description: Uses OCR to extract text from the image, appends the text to my_fav_recipes.txt, and parses the recipe for saving into the database.
+
+
+
+### 4. Get All Recipes
+
+**Endpoint**: `GET /api/recipes`  
+**Description**: Retrieves all stored recipes from the database.
+
+## **4. Chatbot Integration API**
+
+This part of the challenge involves integrating a chatbot that interacts with users to suggest recipes based on their preferences and available ingredients. The chatbot leverages the OpenAI GPT model to refine suggestions.
+
+---
+
+### **API Endpoints**
+
+| Method | Endpoint                | Description                                              |
+|--------|-------------------------|----------------------------------------------------------|
+| POST   | `/api/chatbot`          | Chatbot endpoint for recipe suggestions based on preferences and available ingredients |
+
+---
+
+### **Details of Endpoint**
+
+#### **1. Chatbot Interaction**
+**Endpoint**: `POST /api/chatbot`
+
+**Request Body**:
+```json
 {
-  "suggestion": "How about making Chocolate Cake? Ingredients: Sugar, Cocoa Powder, Milk. Steps: Mix and bake."
+  "preferences": "I want something sweet.",
+  "availableIngredients": ["Flour", "Sugar", "Eggs"]
 }
+
+```
+
+### **Description**
+
+- Fetches all recipes from the database.
+- Filters recipes that can be prepared with the available ingredients.
+- Uses the OpenAI GPT model to refine suggestions based on user preferences.
+- If no matching recipes are found, OpenAI provides alternative recipe ideas based on the provided ingredients.
+
+### **Notes**
+
+- The chatbot uses the OpenAI GPT model to generate suggestions. Ensure your OpenAI API key is configured properly in the `.env` file as `OPENAI_API_KEY`.
+- Ingredients are matched exactly with those in the recipes stored in the database. Ensure the ingredient names are consistent.
+- When no recipes match, the chatbot generates creative ideas based on user-provided ingredients and preferences.
