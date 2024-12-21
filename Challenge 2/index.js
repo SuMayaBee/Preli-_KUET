@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import connectDB from './db/connectDB.js';
 import recipeRoutes from './routes/recipe.route.js';
 import IngredientsRoutes from './routes/ingredients.route.js';
+import router from './routes/chatbot.route.js';
+
 
 
 //sample data for testing
@@ -42,6 +44,9 @@ app.use('/api/ingredients', IngredientsRoutes);
 
 // Routes
 app.use("/api/recipes", recipeRoutes);
+
+app.use("/api/chatbot", router);
+
 
 // define a simple route
 app.get("/", (req, res) => {
