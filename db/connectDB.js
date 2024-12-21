@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
 
-const uri = "mongodb+srv://dippal513:hunter51302@@cluster0.uzftm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = "mongodb+srv://arafathussain:6mnOp7Krgse7BEYf@kitchenbuddy0.dwzce.mongodb.net/?retryWrites=true&w=majority&appName=KitchenBuddy0";
+
 const connectDB = async () => { 
 
   try {
-    const conn = await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+    const conn = await mongoose.connect(uri);
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

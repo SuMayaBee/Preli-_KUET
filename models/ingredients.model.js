@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 
 const ingredientSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    quantity: { type: Number, required: true },
-    unit: { type: String, required: true },
-    lastUpdated: { type: Date, default: Date.now }
+    ingredients: [
+        {
+            name: { type: String, required: true },
+            quantity: { type: String, required: true }, // Quantity as a string (e.g., "2 cups", "500 ml")
+        },
+    ],
+    lastUpdated: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("Ingredient", ingredientSchema);
+export default mongoose.model("Ingredient", ingredientSchema);
